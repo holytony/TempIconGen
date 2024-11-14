@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Icon Generator</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+    
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+    
+            .icons-container {
+                display: flex;
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+    
+            .icon-wrapper {
+                padding: 20px;
+                border-radius: 12px;
+                text-align: center;
+                /* Checkerboard pattern for transparency visibility */
+                background-image: linear-gradient(45deg, #ddd 25%, transparent 25%),
+                                linear-gradient(-45deg, #ddd 25%, transparent 25%),
+                                linear-gradient(45deg, transparent 75%, #ddd 75%),
+                                linear-gradient(-45deg, transparent 75%, #ddd 75%);
+                background-size: 20px 20px;
+                background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            }
+    
+            .icon-wrapper h3 {
+                margin: 0 0 10px 0;
+                color: #333;
+            }
+    
+            canvas {
+                width: 256px;
+                height: 256px;
+                border-radius: 60px;
+            }
+    
+            button {
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: background 0.3s ease;
+            }
+    
+            button:hover {
+                background: #0056b3;
+            }
+
+            .download-button {
+            background: #34C759;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .download-button:hover {
+            background: #2AA147;
+        }
+
+        .icon-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        </style>
+  <body>
+    <div class="container">
+        <div class="icons-container">
+            <div class="icon-wrapper">
+                <h3>Light</h3>
+                <canvas id="lightIcon" width="1024" height="1024"></canvas>
+                <button class="download-button" onclick="downloadIcon('lightIcon')">Download PNG</button>
+            </div>
+            <div class="icon-wrapper">
+                <h3>Dark</h3>
+                <canvas id="darkIcon" width="1024" height="1024"></canvas>
+                <button class="download-button" onclick="downloadIcon('darkIcon')">Download PNG</button>
+            </div>
+            <div class="icon-wrapper">
+                <h3>Tinted</h3>
+                <canvas id="tintedIcon" width="1024" height="1024"></canvas>
+                <button class="download-button" onclick="downloadIcon('tintedIcon')">Download PNG</button>
+            </div>
+        </div>
+        <button onclick="generateIcons()">Generate New Icons</button>
+    </div>
+    <script>
+ function createSquirclePath(ctx, x, y, width, height, radius) {
+            const smoothing = 0.18;
+            ctx.beginPath();
+            
+            // Scale down the radius to match canvas size
+            radius = (radius / 1024) * width;
+            
+            // Top edge
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            
+            // Top right corner
+            ctx.bezierCurveTo(
+                x + width - radius * smoothing, y,
+                x + width, y + radius * smoothing,
+                x + width, y + radius
+            );
+            
+            // Right edge
+            ctx.lineTo(x + width, y + height - radius);
+            
+            // Bottom right corner
+            ctx.bezierCurveTo(
+                x + width, y + height - radius * smoothing,
+                x + width - radius * smoothing, y + height,
+                x + width - radius, y + height
+            );
+            
+            // Bottom edge
+            ctx.lineTo(x + radius, y + height);
+            
+            // Bottom left corner
+            ctx.bezierCurveTo(
+                x + radius * smoothing, y + height,
+                x, y + height - radius * smoothing,
+                x, y + height - radius
+            );
+            
+            // Left edge
+            ctx.lineTo(x, y + radius);
+            
+            // Top left corner
+            ctx.bezierCurveTo(
+                x, y + radius * smoothing,
+                x + radius * smoothing, y,
+                x + radius, y
+            );
+            
+            ctx.closePath();
+        }
+
+
+
+        class ShapeGenerator {
+            static random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            static randomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            static shapes = {
+            circle: (ctx, x, y, size, rotation, color) => {
+                ctx.beginPath();
+                ctx.fillStyle = color;
+                ctx.arc(x, y, size/2, 0, Math.PI * 2);
+                ctx.fill();
+            },
+
+            square: (ctx, x, y, size, rotation, color) => {
+                const cornerRadius = size * 0.1; // 10% of size for rounded corners
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(-size/2 + cornerRadius, -size/2);
+                ctx.lineTo(size/2 - cornerRadius, -size/2);
+                ctx.arcTo(size/2, -size/2, size/2, -size/2 + cornerRadius, cornerRadius);
+                ctx.lineTo(size/2, size/2 - cornerRadius);
+                ctx.arcTo(size/2, size/2, size/2 - cornerRadius, size/2, cornerRadius);
+                ctx.lineTo(-size/2 + cornerRadius, size/2);
+                ctx.arcTo(-size/2, size/2, -size/2, size/2 - cornerRadius, cornerRadius);
+                ctx.lineTo(-size/2, -size/2 + cornerRadius);
+                ctx.arcTo(-size/2, -size/2, -size/2 + cornerRadius, -size/2, cornerRadius);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            },
+
+            triangle: (ctx, x, y, size, rotation, color) => {
+                const cornerRadius = size * 0.1; // 10% of size for rounded corners
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                
+                // Calculate triangle points
+                const h = size * Math.sqrt(3) / 2;
+                const points = [
+                    {x: 0, y: -h/2},           // top
+                    {x: size/2, y: h/2},       // bottom right
+                    {x: -size/2, y: h/2}       // bottom left
+                ];
+                
+                // Draw rounded corners
+                for (let i = 0; i < points.length; i++) {
+                    const current = points[i];
+                    const next = points[(i + 1) % points.length];
+                    const prev = points[(i - 1 + points.length) % points.length];
+                    
+                    const dx = next.x - current.x;
+                    const dy = next.y - current.y;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    const dx2 = prev.x - current.x;
+                    const dy2 = prev.y - current.y;
+                    const angle2 = Math.atan2(dy2, dx2);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(
+                            current.x + cornerRadius * Math.cos(angle2),
+                            current.y + cornerRadius * Math.sin(angle2)
+                        );
+                    }
+                    
+                    ctx.arcTo(current.x, current.y,
+                        current.x + cornerRadius * Math.cos(angle),
+                        current.y + cornerRadius * Math.sin(angle),
+                        cornerRadius);
+                    
+                    ctx.lineTo(
+                        next.x - cornerRadius * Math.cos(angle),
+                        next.y - cornerRadius * Math.sin(angle)
+                    );
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            },
+
+            hexagon: (ctx, x, y, size, rotation, color) => {
+                const cornerRadius = size * 0.1; // 10% of size for rounded corners
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                
+                // Calculate hexagon points
+                const angles = [0, 60, 120, 180, 240, 300];
+                const points = angles.map(angle => ({
+                    x: (size/2) * Math.cos(angle * Math.PI / 180),
+                    y: (size/2) * Math.sin(angle * Math.PI / 180)
+                }));
+                
+                // Draw rounded corners
+                for (let i = 0; i < points.length; i++) {
+                    const current = points[i];
+                    const next = points[(i + 1) % points.length];
+                    const prev = points[(i - 1 + points.length) % points.length];
+                    
+                    const dx = next.x - current.x;
+                    const dy = next.y - current.y;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    const dx2 = prev.x - current.x;
+                    const dy2 = prev.y - current.y;
+                    const angle2 = Math.atan2(dy2, dx2);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(
+                            current.x + cornerRadius * Math.cos(angle2),
+                            current.y + cornerRadius * Math.sin(angle2)
+                        );
+                    }
+                    
+                    ctx.arcTo(current.x, current.y,
+                        current.x + cornerRadius * Math.cos(angle),
+                        current.y + cornerRadius * Math.sin(angle),
+                        cornerRadius);
+                    
+                    ctx.lineTo(
+                        next.x - cornerRadius * Math.cos(angle),
+                        next.y - cornerRadius * Math.sin(angle)
+                    );
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        };
+
+
+        static compositions = {
+        single: (shape) => (ctx, x, y, size, version = 'light') => {
+            shape(ctx, x, y, size * 0.9, 0);
+        },
+
+        double: (shape) => (ctx, x, y, size, version = 'light') => {
+            // Increased shape size from 0.65 to 0.75
+            // Adjusted spacing to prevent overlap while keeping shapes large
+            const shapeSize = size * 0.75;
+            const spacing = size * 0.4; // Slightly increased spacing
+            shape(ctx, x - spacing, y, shapeSize, 0);
+            shape(ctx, x + spacing, y, shapeSize, 0);
+        },
+
+        tripleGradient: (shape) => (ctx, x, y, size, version = 'light') => {
+        const isTinted = version === 'tinted';
+        
+        if (!tripleConfig) {
+            const baseHue = Math.random() * 360;
+            const baseSaturation = 65;
+            tripleConfig = {
+                colors: {
+                    colored: [
+                        `hsl(${baseHue}, ${baseSaturation}%, 65%)`,
+                        `hsl(${baseHue}, ${baseSaturation}%, 55%)`,
+                        `hsl(${baseHue}, ${baseSaturation}%, 45%)`
+                    ],
+                    tinted: [
+                        'rgb(180, 180, 180)',
+                        'rgb(150, 150, 150)',
+                        'rgb(120, 120, 120)'
+                    ]
+                },
+                pattern: Math.random(),
+                shapeType: shape,
+                shapeSize: size * 0.65
+            };
+        }
+
+        const colors = isTinted ? tripleConfig.colors.tinted : tripleConfig.colors.colored;
+        const shapeSize = tripleConfig.shapeSize;
+        
+        // Helper function to draw shadow
+        const drawShadow = (ctx, x, y, size, blur = 10) => {
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = blur;
+            ctx.shadowOffsetX = size * 0.05;
+            ctx.shadowOffsetY = size * 0.05;
+        };
+
+        if (tripleConfig.pattern < 0.125) {
+            // Horizontal alignment
+            const spacing = size * 0.45;
+            shape(ctx, x - spacing, y, shapeSize, 0, colors[0]);
+            shape(ctx, x, y, shapeSize, 0, colors[1]);
+            shape(ctx, x + spacing, y, shapeSize, 0, colors[2]);
+        } 
+        else if (tripleConfig.pattern < 0.286) {
+            // Vertical alignment
+            const spacing = size * 0.45;
+            shape(ctx, x, y - spacing, shapeSize, 0, colors[0]);
+            shape(ctx, x, y, shapeSize, 0, colors[1]);
+            shape(ctx, x, y + spacing, shapeSize, 0, colors[2]);
+        }
+        else if (tripleConfig.pattern < 0.429) {
+            // Diagonal ascending
+            const spacingX = size * 0.4;
+            const spacingY = size * 0.3;
+            shape(ctx, x - spacingX, y + spacingY, shapeSize, 0, colors[0]);
+            shape(ctx, x, y, shapeSize, 0, colors[1]);
+            shape(ctx, x + spacingX, y - spacingY, shapeSize, 0, colors[2]);
+        }
+        else if (tripleConfig.pattern < 0.572) {
+            // Diagonal descending
+            const spacingX = size * 0.4;
+            const spacingY = size * 0.3;
+            shape(ctx, x - spacingX, y - spacingY, shapeSize, 0, colors[0]);
+            shape(ctx, x, y, shapeSize, 0, colors[1]);
+            shape(ctx, x + spacingX, y + spacingY, shapeSize, 0, colors[2]);
+        }
+        else if (tripleConfig.pattern < 0.715) {
+            // Fan pattern
+            const centerX = x;
+            const centerY = y;
+            const radius = size * 0.4;
+            
+            shape(ctx, centerX, centerY, shapeSize, 0, colors[1]);
+            
+            const leftAngle = -Math.PI / 6;
+            const leftX = centerX + radius * Math.cos(leftAngle);
+            const leftY = centerY + radius * Math.sin(leftAngle);
+            shape(ctx, leftX, leftY, shapeSize, leftAngle, colors[0]);
+            
+            const rightAngle = Math.PI / 6;
+            const rightX = centerX + radius * Math.cos(rightAngle);
+            const rightY = centerY + radius * Math.sin(rightAngle);
+            shape(ctx, rightX, rightY, shapeSize, rightAngle, colors[2]);
+        }
+        else if (tripleConfig.pattern < 0.858) {
+            // New: 3D Stack (bottom to top)
+            const offset = size * 0.15;
+            
+            // Bottom shape with shadow
+            drawShadow(ctx, x, y, shapeSize);
+            shape(ctx, x + offset, y + offset, shapeSize, 0, colors[2]);
+            ctx.restore();
+            
+            // Middle shape with shadow
+            drawShadow(ctx, x, y, shapeSize);
+            shape(ctx, x, y, shapeSize, 0, colors[1]);
+            ctx.restore();
+            
+            // Top shape with shadow
+            drawShadow(ctx, x, y, shapeSize);
+            shape(ctx, x - offset, y - offset, shapeSize, 0, colors[0]);
+            ctx.restore();
+        }
+        else if (tripleConfig.pattern < 0.875) {
+            // New: 3D Isometric arrangement
+            const isoOffsetX = size * 0.2;
+            const isoOffsetY = size * 0.15;
+            
+            // Back shape
+            drawShadow(ctx, x, y, shapeSize, 5);
+            shape(ctx, x + isoOffsetX, y - isoOffsetY, shapeSize, 0, colors[2]);
+            ctx.restore();
+            
+            // Middle shape
+            drawShadow(ctx, x, y, shapeSize, 8);
+            shape(ctx, x - isoOffsetX, y - isoOffsetY, shapeSize, 0, colors[1]);
+            ctx.restore();
+            
+            // Front shape
+            drawShadow(ctx, x, y, shapeSize, 10);
+            shape(ctx, x, y + isoOffsetY, shapeSize * 1.1, 0, colors[0]);
+            ctx.restore();
+        }else {
+            // Refined cascading off-axis arrangement
+            const angle = Math.PI / 18; // Reduced to 10 degrees offset
+            const baseOffset = size * 0.2; // Reduced offset distance
+            
+            // Calculate offsets for subtle diagonal arrangement
+            const xOffset = Math.cos(angle) * baseOffset;
+            const yOffset = Math.sin(angle) * baseOffset;
+            
+            // Bottom shape (largest)
+            drawShadow(ctx, x, y, shapeSize, 15);
+            shape(ctx, 
+                x + xOffset, 
+                y + yOffset, 
+                shapeSize * 1.1, // Slightly larger (10% instead of 20%)
+                0, 
+                colors[2]
+            );
+            ctx.restore();
+            
+            // Middle shape
+            drawShadow(ctx, x, y, shapeSize, 10);
+            shape(ctx, 
+                x, 
+                y, 
+                shapeSize, // Original size
+                0, 
+                colors[1]
+            );
+            ctx.restore();
+            
+            // Top shape (smallest)
+            drawShadow(ctx, x, y, shapeSize, 5);
+            shape(ctx, 
+                x - xOffset, 
+                y - yOffset, 
+                shapeSize * 0.9, // Slightly smaller (10% instead of 40%)
+                0, 
+                colors[0]
+            );
+            ctx.restore();
+        }
+    },
+
+        rotated: (shape) => (ctx, x, y, size, version = 'light') => {
+            const shapeSize = size * 0.9;
+            const rotation = Math.PI / 4;
+            shape(ctx, x, y, shapeSize, rotation);
+        }
+    };
+
+            static generateShape() {
+                const shapes = Object.values(this.shapes);
+                return shapes[this.randomInt(0, shapes.length - 1)];
+            }
+
+            static generateComposition() {
+                const compositions = Object.values(this.compositions);
+                const composition = compositions[this.randomInt(0, compositions.length - 1)];
+                return composition(this.generateShape());
+            }
+        }
+
+        let currentComposition;
+        let primaryColor = '#FF3B30';
+        let tripleConfig = null;
+
+        function drawShape(ctx, width, height, backgroundColor, foregroundColor, version = 'light') {
+    ctx.clearRect(0, 0, width, height);
+    
+    // Create base iOS-style squircle background with gradient
+    createSquirclePath(ctx, 0, 0, width, height, width * 0.2);
+    
+    // Create gradient background
+    let gradientColor1, gradientColor2, gradientColor3;
+    if (version === 'light') {
+        gradientColor1 = '#ffffff';
+        gradientColor2 = '#f8f8f8';
+        gradientColor3 = '#f0f0f0';
+    } else if (version === 'dark') {
+        gradientColor1 = '#000000';
+        gradientColor2 = '#101010';
+        gradientColor3 = '#202020';
+    } else { // tinted
+        gradientColor1 = '#000000';
+        gradientColor2 = '#101010';
+        gradientColor3 = '#202020';
+    }
+
+    // Create subtle radial gradient for background
+    const gradient = ctx.createRadialGradient(
+        width * 0.5, height * 0.3, width * 0.1,  // Inner circle
+        width * 0.5, height * 0.5, width * 0.8   // Outer circle
+    );
+    gradient.addColorStop(0, gradientColor1);
+    gradient.addColorStop(0.5, gradientColor2);
+    gradient.addColorStop(1, gradientColor3);
+    
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    
+    // Add subtle inner shadow to the background
+    ctx.save();
+    createSquirclePath(ctx, 0, 0, width, height, width * 0.2);
+    ctx.clip();
+    ctx.shadowColor = version === 'light' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+    ctx.shadowBlur = width * 0.03;
+    ctx.shadowOffsetY = width * 0.01;
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fill();
+    ctx.restore();
+    
+    // Add highlight effect
+    ctx.save();
+    const highlightGradient = ctx.createLinearGradient(0, 0, 0, height);
+    if (version === 'light') {
+        highlightGradient.addColorStop(0, 'rgba(255,255,255,0.15)');
+        highlightGradient.addColorStop(1, 'rgba(255,255,255,0)');
+    } else {
+        highlightGradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+        highlightGradient.addColorStop(1, 'rgba(255,255,255,0)');
+    }
+    createSquirclePath(ctx, 0, 0, width, height, width * 0.2);
+    ctx.fillStyle = highlightGradient;
+    ctx.fill();
+    ctx.restore();
+    
+    // Clip all subsequent drawing to the squircle shape
+    ctx.save();
+    createSquirclePath(ctx, 0, 0, width, height, width * 0.2);
+    ctx.clip();
+    
+    // Set up stroke and fill styles
+    ctx.strokeStyle = foregroundColor;
+    ctx.fillStyle = foregroundColor;
+    ctx.lineWidth = width * 0.02;
+    
+    // Add shadow to the shape composition
+    ctx.shadowColor = version === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = width * 0.03;
+    ctx.shadowOffsetY = width * 0.01;
+    
+    if (!currentComposition) {
+        currentComposition = ShapeGenerator.generateComposition();
+    }
+    
+    // Draw the composition
+    currentComposition(ctx, width/2, height/2, width * 0.6, version);
+    
+    ctx.restore();
+    
+    // Add subtle overlay gradient
+    ctx.save();
+    createSquirclePath(ctx, 0, 0, width, height, width * 0.2);
+    const overlayGradient = ctx.createLinearGradient(0, 0, 0, height);
+    if (version === 'light') {
+        overlayGradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+        overlayGradient.addColorStop(1, 'rgba(0,0,0,0.05)');
+    } else {
+        overlayGradient.addColorStop(0, 'rgba(255,255,255,0.05)');
+        overlayGradient.addColorStop(1, 'rgba(0,0,0,0.1)');
+    }
+    ctx.fillStyle = overlayGradient;
+    ctx.fill();
+    ctx.restore();
+}
+
+        
+
+
+// Update the download function to include the same effects
+function downloadIcon(canvasId) {
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = 1024;
+    offscreenCanvas.height = 1024;
+    const ctx = offscreenCanvas.getContext('2d');
+
+    const version = canvasId.replace('Icon', '').toLowerCase();
+    const backgroundColor = version === 'light' ? '#ffffff' : '#000000';
+    const foregroundColor = version === 'tinted' ? '#888888' : primaryColor;
+
+    // Draw the full icon with effects
+    drawShape(ctx, 1024, 1024, backgroundColor, foregroundColor, version);
+
+    // Create download link
+    const link = document.createElement('a');
+    link.download = `icon-${version}.png`;
+    link.href = offscreenCanvas.toDataURL('image/png');
+    link.click();
+}
+
+function generateIcons() {
+    tripleConfig = null;
+    const hues = [210, 170, 45, 350, 280];
+    const hue = hues[Math.floor(Math.random() * hues.length)];
+    primaryColor = `hsl(${hue}, 65%, 55%)`;
+    
+    currentComposition = ShapeGenerator.generateComposition();
+
+    ['light', 'dark', 'tinted'].forEach(version => {
+        const canvas = document.getElementById(`${version}Icon`);
+        const ctx = canvas.getContext('2d');
+        
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        const backgroundColor = version === 'light' ? '#ffffff' : '#000000';
+        const foregroundColor = version === 'tinted' ? '#888888' : primaryColor;
+        
+        drawShape(ctx, canvas.width, canvas.height, backgroundColor, foregroundColor, version);
+    });
+}
+
+window.onload = generateIcons;
+    </script>
+
+
+</body></html>
