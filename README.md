@@ -1,10 +1,14 @@
+<div align="center">
+<img src="https://github.com/user-attachments/assets/a7d9cb0f-ebe9-4c07-bdd9-e7ecc0a1191e" width="20%">
+</div>
+
 # TempIconGen
 an iOS App placeholder icon generator
 
-## Introduction
-### Introduction
+## Introduction 简介
+
 TempIconGen is a lightweight web application designed to help iOS developers quickly generate placeholder icons. This tool is built entirely using HTML, CSS, and JavaScript, requiring no additional software installation. Simply download and open it in a web browser to start using it. It supports generating 1024x1024 pixel icons and offers multiple appearance styles, including Any Appearance, Dark, and Tinted.
-### 简介
+
 TempIconGen 是一个轻量级的网页应用程序，旨在帮助iOS开发者快速生成占位图标。此工具完全基于HTML、CSS和JavaScript构建，无需安装任何额外软件，只需下载并用浏览器打开即可使用。它支持生成1024x1024像素的图标，并提供多种外观样式选项，包括普通外观（Any Appearance）、深色模式（Dark）和带色调的图标（Tinted）。
 
 ![demo gif](https://github.com/user-attachments/assets/2f8251d9-63dc-4671-b7b2-e70fc2a1e7b2)
