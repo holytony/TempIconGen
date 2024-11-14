@@ -1,5 +1,5 @@
 # TempIconGen
-an iOS Icon Placeholder Generator
+an iOS App placeholder icon generator
 
 ## Introduction
 ### Introduction
