@@ -7,10 +7,7 @@ TempIconGen is a lightweight web application designed to help iOS developers qui
 ### 简介
 TempIconGen 是一个轻量级的网页应用程序，旨在帮助iOS开发者快速生成占位图标。此工具完全基于HTML、CSS和JavaScript构建，无需安装任何额外软件，只需下载并用浏览器打开即可使用。它支持生成1024x1024像素的图标，并提供多种外观样式选项，包括普通外观（Any Appearance）、深色模式（Dark）和带色调的图标（Tinted）。
 
-
-
-
-![截屏2024-11-14 14 15 17](https://github.com/user-attachments/assets/a8aa4ecf-fe2e-47dd-9d38-38bd03340759)
+![demo gif](https://github.com/user-attachments/assets/2f8251d9-63dc-4671-b7b2-e70fc2a1e7b2)
 
 
 ## How to Use
